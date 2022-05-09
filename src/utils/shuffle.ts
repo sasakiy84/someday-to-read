@@ -5,3 +5,7 @@ export const shuffle = ([...array]) => {
   }
   return array;
 };
+
+export const pickOne = <T>(array: T[]): T => {
+  return shuffle(array)[0];
+};

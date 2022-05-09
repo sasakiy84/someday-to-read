@@ -14,7 +14,7 @@ import {
   TransactWriteItemsCommand,
   TransactWriteItemsCommandInput,
 } from "@aws-sdk/client-dynamodb";
-import { shuffle } from "./utils/shuffle";
+import { pickOne, shuffle } from "./utils/shuffle";
 
 const TODO_TABLE = process.env.TODO_TABLE;
 const RANDOM_TABLE = process.env.RANDOM_TABLE;
@@ -191,7 +191,7 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
     try {
       await client.chat.postMessage({
         channel: view.private_metadata,
-        text: shuffle(messageFail)[0],
+        text: pickOne(messageFail),
       });
     } catch (e) {
       logger.error(e);
@@ -205,9 +205,9 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `${
-              shuffle(messageSave)[0]
-            }\n> title: ${title_input}\n> tags: ${tag_input}\n> \n> ${memo_input.replace(
+            text: `${pickOne(
+              messageSave
+            )}\n> title: ${title_input}\n> tags: ${tag_input}\n> \n> ${memo_input.replace(
               /\n/g,
               "\n>"
             )}`,
@@ -245,16 +245,16 @@ app.command("/st-pick", async ({ ack, body, say }) => {
 
   const ids = tagItem?.ids.SS;
   if (!ids) {
-    await say(`${shuffle(messageNotFound)[0]}\n> tag: ${body.text}`);
+    await say(`${pickOne(messageNotFound)}\n> tag: ${body.text}`);
     return;
   }
 
   if (ids.length === 0) {
-    await say(`${shuffle(messageNotFound)[0]}\n> tag: ${body.text}`);
+    await say(`${pickOne(messageNotFound)}\n> tag: ${body.text}`);
     return;
   }
 
-  const targetId = ids[Math.floor(Math.random() * ids.length)];
+  const targetId = pickOne(ids);
 
   const getTodoItemRequestById: GetItemCommandInput = {
     TableName: TODO_TABLE,
@@ -274,7 +274,7 @@ app.command("/st-pick", async ({ ack, body, say }) => {
     throw new Error(`db returns statusCode: ${todoMetadata.httpStatusCode}`);
 
   if (!todoItem) {
-    await say(`${shuffle(messageFail)[0]}\n> tag: ${body.text} is not existed`);
+    await say(`${pickOne(messageFail)}\n> tag: ${body.text} is not existed`);
     return;
   }
 
@@ -288,9 +288,9 @@ app.command("/st-pick", async ({ ack, body, say }) => {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `${
-            shuffle(messagePick)[0]
-          }\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(
+          text: `${pickOne(
+            messagePick
+          )}\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(
             /\n/g,
             "\n>"
           )}`,
@@ -307,9 +307,12 @@ app.command("/st-pick", async ({ ack, body, say }) => {
       },
     ],
     mrkdwn: true,
-    text: `${
-      shuffle(messagePick)[0]
-    }\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(/\n/g, "\n>")}`,
+    text: `${pickOne(
+      messagePick
+    )}\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(
+      /\n/g,
+      "\n>"
+    )}`,
   });
 });
 
@@ -379,9 +382,9 @@ app.action<BlockAction<ButtonAction>>("done", async ({ ack, say, payload }) => {
   );
 
   await say(
-    `${
-      shuffle(messageDone)[0]
-    }\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(/\n/g, "\n>")}`
+    `${pickOne(
+      messageDone
+    )}\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(/\n/g, "\n>")}`
   );
 });
 
