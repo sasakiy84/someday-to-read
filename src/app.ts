@@ -30,7 +30,7 @@ const messageFail = process.env.MESSAGE_FAIL?.split(",") || [
 ];
 
 if (!TODO_TABLE || !RANDOM_TABLE)
-  throw new Error("TODO_TABLE or RANDOM_TABLE required");
+  throw new Error("TODO_TABLE and RANDOM_TABLE required");
 
 const dynamoDbClient = process.env.IS_OFFLINE
   ? new DynamoDBClient({
