@@ -14,7 +14,8 @@ import {
   TransactWriteItemsCommand,
   TransactWriteItemsCommandInput,
 } from "@aws-sdk/client-dynamodb";
-import { pickOne, shuffle } from "./utils/shuffle";
+import { pickOne } from "./utils/shuffle";
+import { buildMessageText } from "utils/message";
 
 const TODO_TABLE = process.env.TODO_TABLE;
 const RANDOM_TABLE = process.env.RANDOM_TABLE;
@@ -198,6 +199,14 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
     }
   }
 
+  const lineDone = pickOne(messageSave);
+  const messageText = buildMessageText(
+    lineDone,
+    title_input,
+    tag_input,
+    memo_input
+  );
+
   try {
     const message = {
       blocks: [
@@ -205,16 +214,11 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `${pickOne(
-              messageSave
-            )}\n> title: ${title_input}\n> tags: ${tag_input}\n> \n> ${memo_input.replace(
-              /\n/g,
-              "\n>"
-            )}`,
+            text: messageText,
           },
         },
       ],
-      text: `${title_input}\n${tag_input}\n${memo_input}`,
+      text: messageText,
     };
     await client.chat.postMessage({
       channel: view.private_metadata,
@@ -282,18 +286,16 @@ app.command("/st-pick", async ({ ack, body, say }) => {
   const tag = todoItem.tag.S;
   const memo = todoItem.memo.S;
 
+  const lineDone = pickOne(messagePick);
+  const messageText = buildMessageText(lineDone, title, tag, memo);
+
   await say({
     blocks: [
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `${pickOne(
-            messagePick
-          )}\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(
-            /\n/g,
-            "\n>"
-          )}`,
+          text: messageText,
         },
         accessory: {
           type: "button",
@@ -307,12 +309,7 @@ app.command("/st-pick", async ({ ack, body, say }) => {
       },
     ],
     mrkdwn: true,
-    text: `${pickOne(
-      messagePick
-    )}\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(
-      /\n/g,
-      "\n>"
-    )}`,
+    text: messageText,
   });
 });
 
@@ -381,11 +378,8 @@ app.action<BlockAction<ButtonAction>>("done", async ({ ack, say, payload }) => {
     new TransactWriteItemsCommand(updateRequest)
   );
 
-  await say(
-    `${pickOne(
-      messageDone
-    )}\n> title: ${title}\n> tags: ${tag}\n> \n> ${memo?.replace(/\n/g, "\n>")}`
-  );
+  const lineDone = pickOne(messageDone);
+  await say(buildMessageText(lineDone, title, tag, memo));
 });
 
 module.exports.handler = async (event: any, context: any, callback: any) => {
