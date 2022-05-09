@@ -1,0 +1,90 @@
+service: someday-to-read
+frameworkVersion: '3'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ap-northeast-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [ TodoTable , Arn ]
+            - Fn::GetAtt: [ RandomTable , Arn ]
+  environment:
+    TODO_TABLE: ${self:custom.todoTableName}
+    RANDOM_TABLE: ${self:custom.randomTableName}
+    SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+    SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
+    MESSAGE_SAVE: ${env:MESSAGE_SAVE}
+    MESSAGE_PICK: ${env:MESSAGE_PICK}
+    MESSAGE_DONE: ${env:MESSAGE_DONE}
+    MESSAGE_NOT_FOUND: ${env:MESSAGE_NOT_FOUND}
+    MESSAGE_FAIL: ${env:MESSAGE_FAIL}
+
+custom:
+  todoTableName: 'todos-table-${sls:stage}'
+  randomTableName: 'randoms-table-${sls:stage}'
+  dynamodb:
+    stages:
+      - dev
+    start:
+      inMemory: true
+      port: 8000
+      migrate: true
+
+
+functions:
+  slack:
+    handler: .dist/app.handler
+    events:
+      - http:
+          path: slack/events
+          method: post
+
+resources:
+  Resources:
+    TodoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.todoTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: tag
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: tag
+            KeyType: RANGE
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    RandomTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.randomTableName}
+        AttributeDefinitions:
+          - AttributeName: tag
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tag
+            KeyType: HASH
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
