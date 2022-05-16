@@ -14,7 +14,7 @@ import { pickOne } from "./shuffle";
 
 export const transactionDbSender = async (
   dbCommand: TransactWriteItemsCommand,
-  sendMessage: (message: string) => Promise<any> = async () => {}
+  errorMessageSender: (message: string) => Promise<any> = async () => {}
 ): Promise<TransactWriteItemsCommandOutput> => {
   const dynamoDbClient = process.env.IS_OFFLINE
     ? new DynamoDBClient({
@@ -30,12 +30,12 @@ export const transactionDbSender = async (
   try {
     result = await dynamoDbClient.send(dbCommand);
   } catch (error) {
-    await sendMessage("db connection error");
+    await errorMessageSender("db connection error");
     throw error;
   }
 
   if (result.$metadata.httpStatusCode !== 200) {
-    await sendMessage(
+    await errorMessageSender(
       `invalid Status Code: ${result.$metadata.httpStatusCode}`
     );
     throw Error(`Invalid Status Code: ${result.$metadata.httpStatusCode}`);
@@ -46,7 +46,7 @@ export const transactionDbSender = async (
 
 export const getDbSender = async (
   dbCommand: GetItemCommand,
-  sendMessage: (message: string) => Promise<any> = async () => {}
+  errorMessageSender: (message: string) => Promise<any> = async () => {}
 ): Promise<Exclude<GetItemCommandOutput["Item"], undefined>> => {
   const dynamoDbClient = process.env.IS_OFFLINE
     ? new DynamoDBClient({
@@ -72,7 +72,7 @@ export const getDbSender = async (
   const item = result.Item;
 
   if (item === undefined) {
-    await sendMessage("");
+    await errorMessageSender("");
     throw Error("Item does not exist");
   }
 

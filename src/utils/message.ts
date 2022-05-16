@@ -10,7 +10,7 @@ export const buildMessageText = (
   line && message.push(`${line}\n`);
   message.push(`> title: ${title}\n`);
   message.push(`> tags: ${tag}\n`);
-  memo && message.push(`\n> \n> ${memo?.replace(/\n/g, "\n>")}`);
+  memo && message.push(`> \n> ${memo?.replace(/\n/g, "\n>")}`);
 
   return message.join("");
 };

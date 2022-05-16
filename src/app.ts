@@ -68,7 +68,7 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
 
   const updateRequest = buildCreateTodoQuery(titleInput, tagInput, memoInput);
 
-  const sendMessage = async (message: string) => {
+  const sendErrorMessage = async (message: string) => {
     try {
       await client.chat.postMessage({
         channel: view.private_metadata,
@@ -82,7 +82,7 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
 
   await transactionDbSender(
     new TransactWriteItemsCommand(updateRequest),
-    sendMessage
+    sendErrorMessage
   );
 
   const lineDone = pickOne(messageSave);
@@ -93,7 +93,15 @@ app.view<ViewSubmitAction>("save", async ({ ack, view, client, logger }) => {
     memoInput
   );
 
-  await sendMessage(messageText);
+  try {
+    await client.chat.postMessage({
+      channel: view.private_metadata,
+      text: `${messageText}`,
+    });
+  } catch (error) {
+    logger.error(error);
+    throw Error("Can`t Send message to slack");
+  }
 });
 
 app.command("/st-pick", async ({ ack, body, say }) => {
