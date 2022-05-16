@@ -12,7 +12,7 @@
 
 # 起動
 ## slackの設定
-slackのアプリケーションフレームワークである![boltの指示](https://slack.dev/bolt-js/ja-jp/tutorial/getting-started)に従って、ボットトークンを取得してください。
+slackのアプリケーションフレームワークである[boltの指示](https://slack.dev/bolt-js/ja-jp/tutorial/getting-started)に従って、ボットトークンを取得してください。
 権限は`chat:write`と`commands`を設定する必要があります。
 ## アプリケーションの設定
 slackのトークンを
@@ -22,7 +22,7 @@ SLACK_BOT_TOKEN=xoxb-xxxxxx
 ```
 に設定してください。
 
-![serverless framework](https://www.serverless.com/)を利用できる環境を用意して、
+[serverless framework](https://www.serverless.com/)を利用できる環境を用意して、
 ```
 npm install
 npm run deploy
